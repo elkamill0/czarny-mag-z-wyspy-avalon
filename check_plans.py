@@ -19,7 +19,7 @@ def check():
         lines = f.readlines()
         for i in range(len(lines)):
             line = lines[i].strip().split('\t')
-            if line[1] != text[i].strip():
+            if line[1][-3:] != text[i].strip()[-3:]:
                 if line[1][:4] == "I-io":
                     changes.append("I-io: " + links[i])
                 elif line[1][:5] == "I-isi":
@@ -32,6 +32,7 @@ def check():
                     changes.append("III-io: " + links[i])
                 elif line[1][:7] == "III-isi":
                     changes.append("III-isi: " + links[i])
+
     if(changes):
         with open("data.txt", "w", encoding='utf-8') as f:
             for i in range(len(links)):

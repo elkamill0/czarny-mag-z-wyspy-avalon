@@ -17,7 +17,7 @@ with open('json/ids.json') as f:
     json_data = json.load(f)
     calendarId = json_data['calendarId']
     bot_token = json_data['discord_bot_token']
-    discord_bot_channel_id = json_data['discord_bot_channel_id']
+    discord_plan_channel_id = json_data['discord_plan_channel_id']
 
 
 
@@ -111,7 +111,7 @@ async def on_scheduled_event_update(after):
 @tasks.loop(minutes=30.0)
 async def send_msg():
     messages = check_plans.check()
-    channel = bot.get_channel(discord_bot_channel_id)
+    channel = bot.get_channel(discord_plan_channel_id)
     print(messages)
     if messages:
         for mess in messages:
