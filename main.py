@@ -12,14 +12,11 @@ import discord
 from discord.ext import commands, tasks
 import check_plans
 
+from load_json import Load_jsons
+from facebook_integration import Fb
 
-with open('json/ids.json') as f:
-    json_data = json.load(f)
-    calendarId = json_data['calendarId']
-    bot_token = json_data['discord_bot_token']
-    discord_plan_channel_id = json_data['discord_plan_channel_id']
-
-
+fb = Fb()
+json_ids = Load_jsons()
 
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 creds = None
@@ -88,15 +85,15 @@ async def on_scheduled_event_create(event):
             ],
         },
     }
-    event = service.events().insert(calendarId=calendarId, body=event).execute()
+    event = service.events().insert(calendarId=json_ids.calendar_calendarId(), body=event).execute()
 
 @bot.event
 async def on_scheduled_event_delete(event):
-    event = service.events().delete(calendarId=calendarId, eventId = event.id).execute()
+    event = service.events().delete(calendarId=json_ids.calendar_calendarId(), eventId = event.id).execute()
 
 @bot.event
-async def on_scheduled_event_update(after):
-    event = service.events().get(calendarId = calendarId, eventId = after.id).execute()
+async def on_scheduled_event_update(before, after):
+    event = service.events().get(calendarId = json_ids.calendar_calendarId(), eventId = after.id).execute()
     end_time = after.end_time.strftime('%Y-%m-%dT%H:%M:%S+00:00')
     start_time = after.start_time.strftime('%Y-%m-%dT%H:%M:%S+00:00')
 
@@ -106,15 +103,23 @@ async def on_scheduled_event_update(after):
     event['start']['dateTime'] = start_time
     event['end']['dateTime'] = end_time
 
-    event = service.events().update(calendarId=calendarId, eventId=after.id, body=event).execute()
+    event = service.events().update(calendarId=json_ids.calendar_calendarId(), eventId=after.id, body=event).execute()
 
 @tasks.loop(minutes=30.0)
 async def send_msg():
     messages = check_plans.check()
-    channel = bot.get_channel(discord_plan_channel_id)
+    channel = bot.get_channel(json_ids.discord_channels_planChannelId())
     print(messages)
     if messages:
         for mess in messages:
             await channel.send(mess)
 
-bot.run(bot_token)
+@bot.command()
+async def post_schedule(ctx):
+    if ctx.message.channel.id != json_ids.discord_channels_mediaChannelId():
+        return 0
+    guild = bot.guilds[0]
+    start_time, end_time = fb.time()
+    await guild.create_scheduled_event(name=fb.name(), start_time=start_time, location="Aula C1", end_time=end_time, description=fb.description(), entity_type=discord.EntityType.external, privacy_level=discord.PrivacyLevel.guild_only)
+
+bot.run(json_ids.discord_bot_token())
