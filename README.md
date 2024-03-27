@@ -13,3 +13,7 @@ this bot automates some functions on czarna magia's discord server:
 - integration discord events with Czarna magia's Google Calendar (via [Google Calendar API](https://developers.google.com/calendar/api/quickstart/python?hl=pl))
 - follows page with study schedules looking for changes
 - hate detection with AI
+
+## Future functionalities
+- receipt detection
+- upgrading polls system
